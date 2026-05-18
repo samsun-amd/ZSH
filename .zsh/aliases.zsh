@@ -5,7 +5,6 @@ alias ....="cd ../../.."
 alias ~="cd ~"
 alias desktop="cd ~/Desktop"
 alias dev="cd /mnt/c/develop"
-alias s="cd /home/chisun/script"
 
 # --- Better Default Commands ---
 alias ll="ls -alF"              # Long list, all files
