@@ -1279,6 +1279,28 @@ install_dotfiles() {
     fix_target_ownership "$TARGET_HOME/.zshrc" "$TARGET_HOME/.zsh"
 }
 
+install_tmux_config() {
+    local config_path="$TARGET_HOME/.tmux.conf"
+    local settings=$'set -g mouse on\nset -g set-clipboard on'
+
+    log "Configuring tmux at $config_path"
+    ensure_directory "$TARGET_HOME"
+
+    if [[ -e "$config_path" || -L "$config_path" ]] && [[ ! -f "$config_path" ]]; then
+        die "$config_path exists and is not a regular file"
+    fi
+
+    if [[ ! -f "$config_path" ]]; then
+        printf '%s\n' "$settings" > "$config_path"
+        chmod 0644 "$config_path"
+    elif [[ "$(tail -n 2 "$config_path")" != "$settings" ]]; then
+        # Keep these overrides last so earlier settings cannot disable them.
+        printf '\n%s\n' "$settings" >> "$config_path"
+    fi
+
+    fix_target_ownership "$config_path"
+}
+
 ensure_shell_registered() {
     local shell_path="$1"
 
@@ -1348,6 +1370,7 @@ main() {
     install_oh_my_zsh
     install_custom_plugins
     install_dotfiles
+    install_tmux_config
     change_default_shell
     log "Done. Start a new terminal session or run: exec zsh"
 }

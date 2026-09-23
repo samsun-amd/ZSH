@@ -91,6 +91,26 @@ plugins=(
 
 Existing `~/.zshrc` and `~/.zsh` paths are backed up with a timestamp suffix before replacement.
 
+## Tmux Configuration
+
+The script creates `~/.tmux.conf` if it does not exist. For an existing file,
+it preserves the contents and appends these settings:
+
+```tmux
+set -g mouse on
+set -g set-clipboard on
+```
+
+If these are already the final two lines, the file is left unchanged. Keeping
+them at the end overrides earlier values, and rerunning the script does not
+append the same block again. Existing files are not replaced or moved to backups.
+
+Mouse support enables scrolling and selection. System clipboard integration
+requires a terminal that supports and allows OSC 52. To apply the settings to
+an existing tmux server, run `tmux source-file ~/.tmux.conf`.
+
+Run the isolated configuration check with `python3 test_bootstrap_tmux.py`.
+
 ## Vim Configuration
 
 After installing `vim`, the script installs Vim configuration from:
