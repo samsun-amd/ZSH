@@ -1,4 +1,4 @@
-"""Exercise first startup, wheel scrolling, selection, and OSC 52 through a PTY."""
+"""Exercise first startup, title updates, scrolling, selection, and OSC 52 through a PTY."""
 
 import base64
 import contextlib
@@ -65,6 +65,13 @@ with tempfile.TemporaryDirectory(prefix="tmux-terminal-") as directory:
         mouse_enabled = b"\x1b[?1000h" in output or b"\x1b[?1002h" in output
         print(f"Terminal {environment['TERM']}: mouse reporting enabled={mouse_enabled}", flush=True)
         assert mouse_enabled, "tmux did not enable terminal mouse reporting"
+
+        pane_tty = run("display-message", "-p", "#{pane_tty}").decode().strip()
+        with open(pane_tty, "wb", buffering=0) as pane:
+            pane.write(b"\x1b]2;Codex title check\x07")
+        wait_for(lambda: re.search(rb"\x1b\][02];Codex title check(?:\x07|\x1b\\)", output))
+        assert run("display-message", "-p", "#{pane_title}").strip() == b"Codex title check"
+        print("Terminal title: forwarded the pane title to the outer terminal", flush=True)
 
         os.write(master, b"\x1b[<64;10;5M" * 3)
         wait_for(lambda: run("display-message", "-p", "#{pane_in_mode}").strip() == b"1")

@@ -1281,7 +1281,7 @@ install_dotfiles() {
 
 install_tmux_config() {
     local config_path="$TARGET_HOME/.tmux.conf"
-    local settings=$'set -g mouse on\nset -g set-clipboard on'
+    local settings=$'set -g mouse on\nset -g set-clipboard on\nset -g set-titles-string "#{pane_title}"\nset -g set-titles on'
 
     log "Configuring tmux at $config_path"
     ensure_directory "$TARGET_HOME"
@@ -1293,7 +1293,7 @@ install_tmux_config() {
     if [[ ! -f "$config_path" ]]; then
         printf '%s\n' "$settings" > "$config_path"
         chmod 0644 "$config_path"
-    elif [[ "$(tail -n 2 "$config_path")" != "$settings" ]]; then
+    elif [[ "$(tail -n 4 "$config_path")" != "$settings" ]]; then
         # Keep these overrides last so earlier settings cannot disable them.
         printf '\n%s\n' "$settings" >> "$config_path"
     fi
@@ -1374,7 +1374,7 @@ main() {
     change_default_shell
     log "Done. Start a new terminal session or run: exec zsh"
 
-    local tmux_notice=$'If mouse scrolling or copying in tmux is not working yet, run this once inside your tmux session:\n  tmux source-file ~/.tmux.conf'
+    local tmux_notice=$'If mouse scrolling, copying, or terminal title updates in tmux are not working yet, run this once inside your tmux session:\n  tmux source-file ~/.tmux.conf'
     if [[ -t 1 && "${TERM:-}" != "dumb" ]]; then
         printf '\033[1;33m[bootstrap_linux_env] WARNING: %s\033[0m\n' "$tmux_notice"
     else

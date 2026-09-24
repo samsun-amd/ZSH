@@ -8,7 +8,10 @@ from pathlib import Path
 
 
 script = Path(__file__).resolve().with_name("bootstrap_linux_env.sh")
-settings = b"set -g mouse on\nset -g set-clipboard on\n"
+settings = (
+    b"set -g mouse on\nset -g set-clipboard on\n"
+    b'set -g set-titles-string "#{pane_title}"\nset -g set-titles on\n'
+)
 
 with tempfile.TemporaryDirectory(prefix="bootstrap-tmux-") as directory:
     target = Path(directory) / "home"
@@ -23,8 +26,10 @@ with tempfile.TemporaryDirectory(prefix="bootstrap-tmux-") as directory:
         b"",
         b"# Custom settings without a trailing newline",
         b"set -g prefix C-a\nset -g mouse off\n",
+        b"set -g mouse on\nset -g set-clipboard on\n",
         settings,
-        settings + b"set -g mouse off\nset -g set-clipboard off\n",
+        settings + b'set -g mouse off\nset -g set-clipboard off\n'
+        b'set -g set-titles off\nset -g set-titles-string "custom"\n',
     ):
         if config.exists():
             config.unlink()

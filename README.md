@@ -99,16 +99,24 @@ it preserves the contents and appends these settings:
 ```tmux
 set -g mouse on
 set -g set-clipboard on
+set -g set-titles-string "#{pane_title}"
+set -g set-titles on
 ```
 
-If these are already the final two lines, the file is left unchanged. Keeping
+If these are already the final four lines, the file is left unchanged. Keeping
 them at the end overrides earlier values, and rerunning the script does not
 append the same block again. Existing files are not replaced or moved to backups.
 
 Mouse support enables scrolling and selection. System clipboard integration
 requires a terminal that supports and allows OSC 52.
 
-**If mouse scrolling or copying in tmux is not working after setup**, run this
+Terminal title updates follow the active pane's title, including updates from
+Codex CLI and changes when switching panes or windows. For a laptop connected
+over SSH, configure this on the remote host running tmux. The laptop terminal
+must allow application title updates; in Windows Terminal, keep
+`suppressApplicationTitle` set to `false`.
+
+**If mouse scrolling, copying, or terminal title updates are not working after setup**, run this
 once inside your tmux session, using the same account you configured:
 
 ```bash
@@ -129,6 +137,8 @@ Run the isolated configuration check with `python3 test_bootstrap_tmux.py`.
 `test_tmux_terminal.py` generates the config in a fresh HOME, starts a new tmux
 server without `-f`, and attaches a PTY client. It sends wheel and drag events,
 checks the history offset and copied buffer, and decodes the emitted OSC 52 data.
+It also sends an OSC 2 title update through the pane's PTY and verifies that the
+outer client receives the same title via OSC 0 or OSC 2.
 It requires Python 3 and tmux; it does not run package installation or SSH setup.
 
 Run both checks inside a network-disabled Bubblewrap sandbox from this repository:
