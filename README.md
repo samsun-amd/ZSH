@@ -106,10 +106,64 @@ them at the end overrides earlier values, and rerunning the script does not
 append the same block again. Existing files are not replaced or moved to backups.
 
 Mouse support enables scrolling and selection. System clipboard integration
-requires a terminal that supports and allows OSC 52. To apply the settings to
-an existing tmux server, run `tmux source-file ~/.tmux.conf`.
+requires a terminal that supports and allows OSC 52.
+
+**If mouse scrolling or copying in tmux is not working after setup**, run this
+once inside your tmux session, using the same account you configured:
+
+```bash
+tmux source-file ~/.tmux.conf
+```
+
+This reloads the settings immediately and keeps your sessions running. Changing
+the file alone does not update a running tmux server. You do not need to restart
+tmux or Linux.
+
+The script prints this reminder as a yellow warning when setup finishes.
+Redirected output and terminals with `TERM=dumb` receive plain text.
 
 Run the isolated configuration check with `python3 test_bootstrap_tmux.py`.
+
+### First-Startup and Terminal Simulation
+
+`test_tmux_terminal.py` generates the config in a fresh HOME, starts a new tmux
+server without `-f`, and attaches a PTY client. It sends wheel and drag events,
+checks the history offset and copied buffer, and decodes the emitted OSC 52 data.
+It requires Python 3 and tmux; it does not run package installation or SSH setup.
+
+Run both checks inside a network-disabled Bubblewrap sandbox from this repository:
+
+```bash
+bwrap --unshare-all --die-with-parent --new-session \
+  --ro-bind / / --tmpfs /home --tmpfs /root --tmpfs /tmp \
+  --tmpfs /run --tmpfs /mnt --tmpfs /etc \
+  --ro-bind /etc/passwd /etc/passwd --ro-bind /etc/group /etc/group \
+  --ro-bind /etc/ld.so.cache /etc/ld.so.cache \
+  --proc /proc --dev /dev --ro-bind "$PWD" /opt \
+  --clearenv --setenv HOME /mnt --setenv PATH /usr/bin:/bin \
+  --setenv LANG C.UTF-8 --setenv TERM xterm-256color --chdir /mnt \
+  /bin/sh -c 'python3 -S /opt/test_bootstrap_tmux.py && python3 -S /opt/test_tmux_terminal.py'
+```
+
+The repository and system files are read-only. HOME, temporary files, processes,
+and tmux sockets are isolated from existing sessions. The command uses the host's
+installed binaries; it is not a fresh distribution or package-installation test.
+
+With tmux 3.4 and the test host's terminfo database, changing the sandbox's TERM
+produced these results. The PTY advertises TERM without terminal-identification replies:
+
+| TERM | Mouse scrolling and selection | OSC 52 output |
+| --- | --- | --- |
+| `xterm-256color` | Passed | Passed |
+| `tmux-256color` | Passed | Passed |
+| `screen-256color` | Passed | Failed: `Ms` capability missing |
+| `vt100` | Failed: no mouse reporting | Not reached |
+
+The last two profiles intentionally fail the terminal check. They demonstrate
+that enabled tmux options alone do not guarantee terminal support. The check
+verifies emitted OSC 52 bytes, not whether a real terminal accepts them into the
+local OS clipboard. Configure the real terminal to advertise its actual
+capabilities and permit clipboard writes; do not blindly override TERM.
 
 ## Vim Configuration
 

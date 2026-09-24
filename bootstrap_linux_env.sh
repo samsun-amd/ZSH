@@ -1373,6 +1373,13 @@ main() {
     install_tmux_config
     change_default_shell
     log "Done. Start a new terminal session or run: exec zsh"
+
+    local tmux_notice=$'If mouse scrolling or copying in tmux is not working yet, run this once inside your tmux session:\n  tmux source-file ~/.tmux.conf'
+    if [[ -t 1 && "${TERM:-}" != "dumb" ]]; then
+        printf '\033[1;33m[bootstrap_linux_env] WARNING: %s\033[0m\n' "$tmux_notice"
+    else
+        printf '[bootstrap_linux_env] WARNING: %s\n' "$tmux_notice"
+    fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
